@@ -5,7 +5,7 @@ Reference: https://medium.com/mlearning-ai/vision-transformers-from-scratch-pyto
 
 import numpy as np
 
-from tqdm import tqdm, trange
+#from tqdm import tqdm, trange  #顯示進度條
 
 import torch
 import torch.nn as nn
