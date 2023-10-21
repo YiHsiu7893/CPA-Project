@@ -1,5 +1,8 @@
-# Vit for MNIST classification task
-# Reference: https://medium.com/mlearning-ai/vision-transformers-from-scratch-pytorch-a-step-by-step-guide-96c3313c2e0c
+"""
+Vit for MNIST classification task
+Reference: https://medium.com/mlearning-ai/vision-transformers-from-scratch-pytorch-a-step-by-step-guide-96c3313c2e0c
+"""
+
 import numpy as np
 
 from tqdm import tqdm, trange
