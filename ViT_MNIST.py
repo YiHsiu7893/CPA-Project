@@ -206,4 +206,4 @@ with torch.no_grad():
         correct += torch.sum(torch.argmax(y_hat, dim=1) == y).detach().item()
         total += len(x)
     print("Test loss: %.2f" % (test_loss))
-    print("Test accuracy: %.2f%" % (correct / total * 100))    
+    print("Test accuracy: %.2f%%" % (correct / total * 100))    
