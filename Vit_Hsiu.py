@@ -1,7 +1,7 @@
 """
 Vit for CIFAR10 classification task
 Hsiu's practice version
-the best result, but only with 38.05% accuracy...qq
+the best result, but only with 41.75% accuracy...qq
 """
 import numpy as np
 
@@ -164,8 +164,8 @@ N_HEADS = 2
 
 # 3. depends on training
 BATCH_SIZE = 128
-EPOCHS = 5
-LR = 0.005
+EPOCHS = 10
+LR = 0.001
 
 # Loading data
 train = CIFAR10(root='./cifar10', train=True, transform=ToTensor(), download=True)
