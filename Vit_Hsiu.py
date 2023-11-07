@@ -1,7 +1,7 @@
 """
 Vit for CIFAR10 classification task
 Hsiu's practice version
-the best result, but only with 41.75% accuracy...qq
+the best result, but only with 46.27% accuracy...qq
 """
 import numpy as np
 
@@ -158,13 +158,13 @@ N_PATCHES = 8
 OUT_D = 10
 
 # 2. depends on architecture
-N_BLOCKS = 2
+N_BLOCKS = 6
 HIDDEN_D = 16
 N_HEADS = 2
 
 # 3. depends on training
-BATCH_SIZE = 128
-EPOCHS = 10
+BATCH_SIZE = 32
+EPOCHS = 10 
 LR = 0.001
 
 # Loading data
