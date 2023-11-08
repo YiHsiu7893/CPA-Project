@@ -200,20 +200,20 @@ for epoch in range(EPOCHS):
     if epoch%20 == 0: 
         torch.save(model.state_dict(), "Cifar10.h5")
 
-# Test loop
-with torch.no_grad():
-    correct, total = 0, 0
-    test_loss = 0.0
-    for batch in tqdm(test_loader, desc="Testing"):
-        x, y = batch
-        y_predict = model(x)
-        loss = loss_func(y_predict, y)
-        test_loss += loss.detach().item()/len(test_loader)
-
-        correct += torch.sum(torch.argmax(y_predict, dim=1) == y).detach().item()
-        total += len(x)
-    print("Test loss: %.2f" % (test_loss))
-    print("Test accuracy: %.2f%%" % (correct/total*100))
-
-    with open("cifar10_accuracy.txt", "a") as file:
-        file.write(f"Epoch {epoch+3}: Test loss = {test_loss:.2f}, Test accuracy = {correct / total * 100:.2f}%\n")
+    # Test loop
+    with torch.no_grad():
+        correct, total = 0, 0
+        test_loss = 0.0
+        for batch in tqdm(test_loader, desc="Testing"):
+            x, y = batch
+            y_predict = model(x)
+            loss = loss_func(y_predict, y)
+            test_loss += loss.detach().item()/len(test_loader)
+    
+            correct += torch.sum(torch.argmax(y_predict, dim=1) == y).detach().item()
+            total += len(x)
+        print("Test loss: %.2f" % (test_loss))
+        print("Test accuracy: %.2f%%" % (correct/total*100))
+    
+        with open("cifar10_accuracy.txt", "a") as file:
+            file.write(f"Epoch {epoch+3}: Test loss = {test_loss:.2f}, Test accuracy = {correct / total * 100:.2f}%\n")
