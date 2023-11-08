@@ -1,8 +1,8 @@
 """
 Vit for CIFAR10 classification task
 Hsiu's practice version
-the best result, but only with 46.27% accuracy...qq
 """
+import os
 import numpy as np
 
 from tqdm import tqdm
@@ -160,11 +160,11 @@ OUT_D = 10
 # 2. depends on architecture
 N_BLOCKS = 6
 HIDDEN_D = 16
-N_HEADS = 2
+N_HEADS = 4
 
 # 3. depends on training
 BATCH_SIZE = 32
-EPOCHS = 10 
+EPOCHS = 48 
 LR = 0.001
 
 # Loading data
@@ -181,6 +181,9 @@ model = MyViT(chw=CHW, n_patches=N_PATCHES, n_blocks=N_BLOCKS, hidden_d=HIDDEN_D
 optimizer = Adam(model.parameters(), lr=LR)
 loss_func = CrossEntropyLoss()
 
+if os.path.exists("Cifar10.h5"):
+    model.load_state_dict(torch.load("Cifar10.h5"))
+
 for epoch in range(EPOCHS):
     train_loss = 0.0
     for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1} in training", leave=False):
@@ -193,6 +196,9 @@ for epoch in range(EPOCHS):
         loss.backward()
         optimizer.step()
     print("Epoch %d/%d loss: %.2f" % (epoch+1, EPOCHS, loss))
+
+    if epoch%20 == 0: 
+        torch.save(model.state_dict(), "Cifar10.h5")
 
 # Test loop
 with torch.no_grad():
@@ -208,3 +214,6 @@ with torch.no_grad():
         total += len(x)
     print("Test loss: %.2f" % (test_loss))
     print("Test accuracy: %.2f%%" % (correct/total*100))
+
+    with open("cifar10_accuracy.txt", "a") as file:
+        file.write(f"Epoch {epoch+3}: Test loss = {test_loss:.2f}, Test accuracy = {correct / total * 100:.2f}%\n")
