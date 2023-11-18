@@ -11,7 +11,7 @@ ViT
 
 Visualization
 ---
-Attention Rollout
-    attRollout.py
-    attention_rollout_cifar10.py
+    Attention Rollout  
+        attRollout.py  
+        attention_rollout_cifar10.py  
   
