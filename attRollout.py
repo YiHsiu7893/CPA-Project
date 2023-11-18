@@ -4,6 +4,7 @@ Reference:
 https://colab.research.google.com/github/mashaan14/VisionTransformer-MNIST/blob/main/VisionTransformer_MNIST.ipynb#scrollTo=_tKasVMrfY3I
 """
 
+import os
 import numpy as np
 from tqdm import tqdm  
 import torch
@@ -182,6 +183,9 @@ model = ViT(chw=CHW, n_patches=N_PATCHES, n_blocks=N_BLOCKS, hidden_d=HIDDEN_D, 
 optimizer = Adam(model.parameters(), lr=LR)
 loss_func = CrossEntropyLoss()
 
+if os.path.exists("Weights.h5"):
+    model.load_state_dict(torch.load("Weights.h5"))
+
 for epoch in range(EPOCHS):
     train_loss = 0.0
     for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1} in training", leave=False):
@@ -196,6 +200,9 @@ for epoch in range(EPOCHS):
         optimizer.step()
 
     print("Epoch %d/%d loss: %.2f" % (epoch+1, EPOCHS, train_loss))
+
+    if (epoch+1)%10 == 0: 
+        torch.save(model.state_dict(), "Weights.h5")
 
 # Test loop
 with torch.no_grad():
@@ -216,61 +223,57 @@ with torch.no_grad():
 #-- Visualization Part --#
 # Prepare the test sample,
 # the process is similar to what ViT does
-img_tensor = test_data.data[58].to(device)
-patches = patchify(img_tensor.unsqueeze(0).unsqueeze(0), N_PATCHES).to(model.positional_embeddings.device)
-tokens = model.linear_mapper(patches.float())
-tokens = torch.cat((model.class_token.expand(1, 1, -1), tokens), dim=1)
-transformer_input = tokens + model.positional_embeddings.repeat(1, 1, 1)
+for i in range(10):
+    img_tensor = test_data.data[i].to(device)
+    patches = patchify(img_tensor.unsqueeze(0).unsqueeze(0), N_PATCHES).to(model.positional_embeddings.device)
+    tokens = model.linear_mapper(patches.float())
+    tokens = torch.cat((model.class_token.expand(1, 1, -1), tokens), dim=1)
+    transformer_input = tokens + model.positional_embeddings.repeat(1, 1, 1)
 
-out = transformer_input.clone()
-for block in model.blocks:
-    out = block(out)
-#transformer_output = out[:, 0]
-print("Input tensor to Transformer: ", transformer_input.shape)
-#print("Output vector from Transformer:", transformer_output.shape)
+    # Expand the dimension to hidden_dim*mlp_ratio
+    mlp_linear_layer = model.blocks[0].mlp[0]
+    transformer_input = mlp_linear_layer(transformer_input)
 
-# Expand the dimension to hidden_dim*mlp_ratio
-mlp_linear_layer = model.blocks[0].mlp[0]
-transformer_input = mlp_linear_layer(transformer_input)
+    # Split qkv into mulitple q, k, and v vectors for multi-head attantion
+    qkv = transformer_input.reshape(50, 2, 4, 4)
+    q = qkv[:, 0].permute(1, 0, 2)
+    k = qkv[:, 1].permute(1, 0, 2)
+    kT = k.permute(0, 2, 1)
+    # Attention Matrix
+    attention_matrix = q @ kT
+    # Average the attention weights across all heads.
+    attention_matrix = torch.mean(attention_matrix, dim=0)
 
-# Split qkv into mulitple q, k, and v vectors for multi-head attantion
-qkv = transformer_input.reshape(50, 2, 4, 4)
-q = qkv[:, 0].permute(1, 0, 2)
-k = qkv[:, 1].permute(1, 0, 2)
-kT = k.permute(0, 2, 1)
-# Attention Matrix
-attention_matrix = q @ kT
-# Average the attention weights across all heads.
-attention_matrix = torch.mean(attention_matrix, dim=0)
+    # 1) Residual Connection: 
+    # Add an identity matrix and Renormalize the weights.
+    I = torch.eye(attention_matrix.size(1)).to(device)
+    attention_matrix = attention_matrix + I
+    attention_matrix = attention_matrix / attention_matrix.sum(dim=-1).unsqueeze(-1)
 
-# 1) Residual Connection: 
-# Add an identity matrix and Renormalize the weights.
-I = torch.eye(attention_matrix.size(1)).to(device)
-attention_matrix = attention_matrix + I
-attention_matrix = attention_matrix / attention_matrix.sum(dim=-1).unsqueeze(-1)
+    # 2) Linear Combination
+    # Recursively multiply the weight matrices
+    joint_attentions = torch.zeros(attention_matrix.size()).to(device)
 
-# 2) Linear Combination
-# Recursively multiply the weight matrices
-joint_attentions = torch.zeros(attention_matrix.size()).to(device)
+    joint_attentions[0] = attention_matrix[0]
+    for n in range(1, attention_matrix.size(0)):
+        joint_attentions[n] = torch.matmul(attention_matrix[n], joint_attentions[n-1])
 
-joint_attentions[0] = attention_matrix[0]
-for n in range(1, attention_matrix.size(0)):
-    joint_attentions[n] = torch.matmul(attention_matrix[n], joint_attentions[n-1])
+    attn_heatmap = joint_attentions[0, 1:].reshape((7, 7))
+    # Use bilinear interpolation to enlarge the heatmap size
+    attn_heatmap_resized = F.interpolate(attn_heatmap.unsqueeze(0).unsqueeze(0), [28, 28], mode='bilinear').view(28, 28, 1)
 
-attn_heatmap = joint_attentions[0, 1:].reshape((7, 7))
-# Use bilinear interpolation to enlarge the heatmap size
-attn_heatmap_resized = F.interpolate(attn_heatmap.unsqueeze(0).unsqueeze(0), [28, 28], mode='bilinear').view(28, 28, 1)
-
-# Visualize attention map
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
-img = np.asarray(img_tensor.cpu())
-ax1.imshow(img, cmap='gray')
-ax1.set_title('MNIST test sample')
-ax1.tick_params(axis='both', which='both', bottom=False, top=False, left=False, right=False,
-               labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-
-ax2.imshow(attn_heatmap_resized.detach().cpu().numpy())
-ax2.set_title('Attention map')
-ax2.tick_params(axis='both', which='both', bottom=False, top=False, left=False, right=False,
+    # Visualize attention map
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+    img = np.asarray(img_tensor.cpu())
+    ax1.imshow(img, cmap='gray')
+    ax1.set_title('MNIST test sample')
+    ax1.tick_params(axis='both', which='both', bottom=False, top=False, left=False, right=False,
                 labelbottom=False, labeltop=False, labelleft=False, labelright=False)
-plt.show()
+
+    ax2.imshow(attn_heatmap_resized.detach().cpu().numpy())
+    ax2.set_title('Attention map')
+    ax2.tick_params(axis='both', which='both', bottom=False, top=False, left=False, right=False,
+                    labelbottom=False, labeltop=False, labelleft=False, labelright=False)
+
+    file_name = f'Visualization_{i:d}.png'
+    plt.savefig(file_name)
