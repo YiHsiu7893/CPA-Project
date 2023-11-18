@@ -1,7 +1,7 @@
 """
-Vit for MNIST classification task
-Reference: https://medium.com/mlearning-ai/vision-transformers-from-scratch-pytorch-a-step-by-step-guide-96c3313c2e0c
-https://hackmd.io/@Maxlight/SkuYB0w6_
+Attention Rollout of Vit on MNIST classification task
+Reference: 
+https://colab.research.google.com/github/mashaan14/VisionTransformer-MNIST/blob/main/VisionTransformer_MNIST.ipynb#scrollTo=_tKasVMrfY3I
 """
 
 import numpy as np
