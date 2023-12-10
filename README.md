@@ -20,5 +20,9 @@ Attention Rollout
 ---
 Reference from [VisionTransformer_MNIST.ipynb](https://colab.research.google.com/github/mashaan14/VisionTransformer-MNIST/blob/main/VisionTransformer_MNIST.ipynb#scrollTo=IWrZnDnnS1X2 "游標顯示")  
 - attRollout.py  
-- attention_rollout_cifar10.py  
+- attention_rollout_cifar10.py
+  
+LRP
+---
+Reference from [Transformer-Explainability](https://github.com/hila-chefer/Transformer-Explainability/tree/main?tab=readme-ov-file "游標顯示")
   
