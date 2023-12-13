@@ -1,8 +1,4 @@
 import os
-from tqdm import tqdm
-import h5py
-
-import argparse
 
 # Import saliency methods and models
 from misc_functions import *
@@ -13,16 +9,10 @@ from torchvision.datasets.cifar import CIFAR10
 from torch.utils.data import DataLoader
 
 import torchvision.transforms as transforms
-from torchvision.transforms import ToPILImage, ToTensor
 import torch
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-import einops
-from PIL import Image
-import torchvision.transforms.functional as F
-import matplotlib.pyplot as plt
-
 
 def show_cam_on_image(img, mask):
     heatmap = cv2.applyColorMap(np.uint8(255 * mask), cv2.COLORMAP_JET)
@@ -45,6 +35,13 @@ def generate_visualization(original_image, class_index=None):
     vis = cv2.cvtColor(np.array(vis), cv2.COLOR_RGB2BGR)
     return vis
 
+def label_to_class_name(label):
+    class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
+    if 0 <= label < len(class_names):
+        return class_names[label]
+    else:
+        return "Unknown"
+
 if __name__ == "__main__":    
     # LRP
     model = ViT_cifar10(pretrained=True)
@@ -66,27 +63,33 @@ if __name__ == "__main__":
         transforms.ToTensor(),
         normalize,
     ])
+    
+    result_folder = 'result/cifar10'
+    if not os.path.exists(result_folder):
+        os.makedirs(result_folder)
 
     test_data = CIFAR10(root='./cifar10', train=False, download=False, transform=transform)
     test_loader = DataLoader(test_data, shuffle=False, batch_size=32)
-    
-    img_tensor = torch.from_numpy(test_data.data[0])
-    print(img_tensor.shape)
-    patches = img_tensor.permute(2, 0, 1)
-    
 
-    image_path = 'image/cifar10_1.png'
-    image = Image.open(image_path)
-    cat_image = transform(image)
-    fig, axs = plt.subplots(1, 3)
-    axs[0].imshow(image);
-    axs[0].axis('off');
-    output = model(cat_image.unsqueeze(0))
-    print(output)
-    #transforms.functional.to_pil_image(image).save(save_path)
-    #output = model(img_tensor.unsqueeze(0))
-    visulization = generate_visualization(cat_image)
-    print(visulization.shape)
-    plt.imshow(visulization)
-    plt.show()
+    for i in range(0,11):    
+        img_tensor = torch.from_numpy(test_data.data[i])
+        image = test_data[i][0]
+        output = model(image.unsqueeze(0))
+        right_class_name = label_to_class_name(test_data[i][1])
+        predict_class_name = label_to_class_name(torch.argmax(output))
+        visualization = generate_visualization(image)
+        
+        plt.subplot(1, 2, 1)
+        plt.imshow(img_tensor)
+        plt.title(right_class_name)
 
+        plt.subplot(1, 2, 2)
+        plt.imshow(visualization)
+        plt.title(predict_class_name)
+
+        file_name = f'{result_folder}/cifar10_{i}.png'
+        plt.savefig(file_name)
+        
+        plt.show()
+        
+        
