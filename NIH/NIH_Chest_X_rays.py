@@ -259,7 +259,7 @@ class VisionTransformer(nn.Module):
     """ Vision Transformer with support for patch or hybrid CNN input stage
     """
 
-    def __init__(self, img_size=224, patch_size=8, in_chans=1, num_classes=1, embed_dim=36, depth=6,
+    def __init__(self, img_size=224, patch_size=8, in_chans=1, num_classes=2, embed_dim=36, depth=6,
                  num_heads=4, mlp_ratio=4., qkv_bias=False, mlp_head=False, drop_rate=0., attn_drop_rate=0.):
         super().__init__()
         self.num_classes = num_classes
@@ -487,8 +487,8 @@ class CustomDataset(Dataset):
         return image, label
 
 if __name__=="__main__":
-    BATCH_SIZE = 128
-    LEARNING_RATE = 0.005
+    BATCH_SIZE = 32
+    LEARNING_RATE = 0.001
     EPOCHES = 2
     
     weights_folder = 'model_weight'
@@ -562,7 +562,8 @@ if __name__=="__main__":
             print(y)
             optimizer.zero_grad()
             y_hat = model(x)
-            loss = criterion(y_hat, y.float())
+            print(y_hat)
+            loss = criterion(y_hat, y)
             loss.backward()
             optimizer.step()
 
