@@ -482,7 +482,7 @@ class CustomDataset(Dataset):
         if self.transform:
             image = self.transform(image)
 
-        label = torch.Tensor([self.dataframe.iloc[idx]['label'].item()]).long()
+        label = self.dataframe.iloc[idx]['label'].item()
         #print(label)
         return image, label
 
