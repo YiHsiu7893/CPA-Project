@@ -9,7 +9,6 @@ from PIL import Image
 import os
 import shutil
 from glob import glob
-from torch.utils.data import DataLoader
 from torch.optim import Adam
 from torch.nn import CrossEntropyLoss
 
@@ -426,10 +425,10 @@ def _conv_filter(state_dict, patch_size=16):
         out_dict[k] = v
     return out_dict
 
-def ViT_mnist(pretrained = False, **kwargs):
+def ViT_NIH(pretrained = False, **kwargs):
     model = VisionTransformer()
     if pretrained:
-        pretrained_weights_path = 'model_weight/mnist_weights_10.pt'
+        pretrained_weights_path = 'model_weight/NIH_weights_2.pt'
         if os.path.exists(pretrained_weights_path):
             model.load_state_dict(torch.load(pretrained_weights_path))
             print("use pretrained weight")
@@ -445,7 +444,7 @@ def show_cam_on_image(img, mask):
     cam = cam / np.max(cam)
     return cam
 
-def generate_visualization(original_image, class_index=None):
+"""def generate_visualization(original_image, class_index=None):
     transformer_attribution = attribution_generator.generate_LRP(original_image.unsqueeze(0), method="transformer_attribution", index=class_index).detach()
     transformer_attribution = transformer_attribution.reshape(1, 1, 7, 7)
     transformer_attribution = torch.nn.functional.interpolate(transformer_attribution, scale_factor=4, mode='bilinear')
@@ -457,7 +456,7 @@ def generate_visualization(original_image, class_index=None):
     vis = show_cam_on_image(image_transformer_attribution, transformer_attribution)
     vis =  np.uint8(255 * vis)
     vis = cv2.cvtColor(np.array(vis), cv2.COLOR_RGB2BGR)
-    return vis
+    return vis"""
 
 def label_to_class_name(label):
     class_names = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
@@ -488,7 +487,7 @@ class CustomDataset(Dataset):
 
 if __name__=="__main__":
     BATCH_SIZE = 32
-    LEARNING_RATE = 0.001
+    LEARNING_RATE = 0.0005
     EPOCHES = 2
     
     weights_folder = 'model_weight'
@@ -497,7 +496,7 @@ if __name__=="__main__":
     
     model=VisionTransformer()
         
-    pretrained_weights_path = 'model_weight/NIH_weights_10.pt'
+    pretrained_weights_path = 'model_weight/NIH_weights_2.pt'
     if os.path.exists(pretrained_weights_path):
         model.load_state_dict(torch.load(pretrained_weights_path))
         print("use pretrained weight")
@@ -557,19 +556,18 @@ if __name__=="__main__":
         print("epoch %d" % (epoch+1))
         model.train()
         print("train mode")
-        for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1} in training", leave=False):
+        for batch in tqdm(train_loader, desc=f"Epoch {epoch + 3} in training", leave=False):
             x, y = batch
-            print(y)
+            #print(y)
             optimizer.zero_grad()
             y_hat = model(x)
-            print(y_hat)
+            #print(y_hat)
             loss = criterion(y_hat, y)
             loss.backward()
             optimizer.step()
 
-        if (epoch+1)%10 == 0:
-            weight_path = os.path.join(weights_folder, f'NIH_weights_{epoch + 1}.pt')
-            torch.save(model.state_dict(), weight_path)   
+        weight_path = os.path.join(weights_folder, f'NIH_weights_{epoch + 1}.pt')
+        torch.save(model.state_dict(), weight_path)   
     
     model.eval()
 
@@ -588,7 +586,7 @@ if __name__=="__main__":
     accuracy = correct_predictions / total_samples
     print(f"Accuracy on test set: {accuracy * 100:.2f}%")
     
-    attribution_generator = LRP(model)
+    """attribution_generator = LRP(model)
 
     normalize = transforms.Normalize(mean=[0.5], std=[0.5])
 
@@ -622,4 +620,4 @@ if __name__=="__main__":
         file_name = f'{result_folder}/NIH_{i}.png'
         plt.savefig(file_name)
         
-        plt.show()
+        plt.show()"""
