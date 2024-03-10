@@ -32,6 +32,8 @@ if __name__=="__main__":
     data_entry = data_entry.dropna(subset=['full_path'])
     data_entry['label'] = data_entry['class'].apply(lambda target: 0 if target == 'Normal' else 1)
     data_entry = data_entry.drop(columns=['Id', 'class'])
+    normal_dataset = data_entry[data_entry['label'] == 0]
+    train_set, test_set = train_test_split(normal_dataset, test_size = 0.3, random_state = 1999)
     
-    data_entry.to_csv('RSNA.csv', index=False)
-    print(data_entry)
+    train_set.to_csv('training_data.csv', index=False)
+    print(train_set)
