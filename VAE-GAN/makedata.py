@@ -33,7 +33,11 @@ if __name__=="__main__":
     data_entry['label'] = data_entry['class'].apply(lambda target: 0 if target == 'Normal' else 1)
     data_entry = data_entry.drop(columns=['Id', 'class'])
     normal_dataset = data_entry[data_entry['label'] == 0]
-    train_set, test_set = train_test_split(normal_dataset, test_size = 0.3, random_state = 1999)
-    
-    train_set.to_csv('training_data.csv', index=False)
-    print(train_set)
+    abnormal_dataset = data_entry[data_entry['label'] == 1]
+    print(abnormal_dataset)
+    train_set, others = train_test_split(normal_dataset, test_size = 0.3, random_state = 1999)
+    others = pd.concat([abnormal_dataset, others], ignore_index=True)
+    validation_set, test_set = train_test_split(others, test_size = 0.6, random_state = 1999)
+
+    test_set.to_csv('testing_data.csv', index = False, mode='w')
+    train_set.to_csv('training_data.csv', index=False, mode='w')
